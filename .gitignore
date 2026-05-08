@@ -1,0 +1,11 @@
+# Local data and dumps
+/tmp/
+*.sql.gz
+*.dump
+*.duckdb
+.bashrcecho
+
+# Python (you'll need this in Week 3)
+__pycache__/
+.venv/
+*.pyc
