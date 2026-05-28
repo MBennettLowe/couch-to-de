@@ -134,3 +134,42 @@ Rentals per customer, top 10 most active (Day 3 exercise):
 - HAVING with combined filters (WHERE + HAVING in the same query).
 - Writing aggregations against unfamiliar tables — building the habit of
   `\d tablename` first to see what columns exist before querying.
+
+## Day 4 — Joins: INNER, LEFT, RIGHT, FULL OUTER
+
+### Setup routine
+
+- docker start pg          → start the Postgres container
+- docker ps                → confirm the CONTAINER is up (not psql — psql
+                             is the client, launched separately)
+- psql pagila              → connect to the pagila database
+- quick COUNT(*) query     → confirm I have access
+
+### Concepts that clicked
+
+Joins combine rows from two tables on a matching column. The key question
+that separates the four types: which table's UNMATCHED rows do you keep?
+
+- INNER JOIN — only rows that match in BOTH tables (the overlap).
+  Keeps no unmatched rows.
+- LEFT JOIN — ALL rows from the left table + matching rows from the right.
+  Unmatched right side comes back as NULL.
+- RIGHT JOIN — ALL rows from the right table + matching rows from the left.
+  Unmatched left side comes back as NULL. Mirror image of LEFT. (Rarely
+  written in practice — people flip table order and use LEFT instead.)
+- FULL OUTER JOIN — ALL rows from BOTH tables. Matches combine; anything
+  unmatched on either side is kept with NULLs filling the missing side.
+  Nothing gets dropped.
+
+Mental shortcut:
+  INNER = overlap only
+  LEFT  = all left + matches
+  RIGHT = all right + matches
+  FULL  = everything, both sides
+
+### Still need practice
+
+- Writing multi-table joins (e.g. actor → film_actor → film) where you
+  chain joins across a linking table.
+- Recognizing when a LEFT JOIN is needed to AVOID dropping rows (e.g.
+  customers with zero rentals would vanish under an INNER JOIN).
