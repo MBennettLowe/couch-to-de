@@ -173,3 +173,73 @@ Mental shortcut:
   chain joins across a linking table.
 - Recognizing when a LEFT JOIN is needed to AVOID dropping rows (e.g.
   customers with zero rentals would vanish under an INNER JOIN).
+
+
+## Day 5 — Subqueries and CTEs (WITH clauses)
+
+### Setup gotchas
+
+- Restarting today, I typed `docker start ps` instead of `docker start pg`.
+  - `pg` is the NAME I gave my container with `docker run --name pg`.
+  - `ps` is the Unix "process status" subcommand — `docker ps` lists
+    running containers.
+  - They look almost identical in a terminal. Read errors carefully.
+
+- CLI tool structure: `<command> <subcommand> [arguments]`. Same pattern
+  for docker, git, psql, dbt, gcloud, etc.
+
+### Concepts that clicked
+
+- Subqueries put a query inside another query (parentheses). Read
+  inside-out. Anonymous and single-use.
+
+- CTEs (Common Table Expressions, `WITH ... AS (...)`) name a query at
+  the top, then reference it by name below. Read top-to-bottom.
+
+- Both produce the same answer for the same logic. The choice is about
+  readability and reuse.
+
+### Subquery vs CTE — what I'd reach for now
+
+My first instinct was to prefer subqueries because they match my habit
+of "peek at a query, then use its result" — sticking a query inside
+another query feels like that.
+
+The experienced take is the opposite: prefer CTEs for anything beyond
+trivial.
+- CTEs read top-to-bottom like a story; subqueries read inside-out and
+  get unreadable as logic grows.
+- CTEs can be named meaningfully (`top_customers`); subqueries are
+  anonymous and harder to remember six months later.
+- CTEs can be reused multiple times in the same query; subqueries can't.
+- Modern warehouses optimize both equally — the old "subqueries are
+  faster" folklore is outdated.
+
+Subqueries still earn their keep when you just need ONE scalar value
+inline, like `WHERE length > (SELECT AVG(length) FROM film)`.
+
+My "peek-first" habit still works with CTEs — better, actually. You
+write WITH step1 AS (...) SELECT * FROM step1, verify the result, add
+step2, verify, and so on. You get to peek BETWEEN every step.
+
+### Queries I ran
+
+WITH top_customers AS (
+  SELECT customer_id, COUNT(*) AS rentals
+  FROM rental
+  GROUP BY customer_id
+  ORDER BY rentals DESC
+  LIMIT 10
+)
+SELECT t.customer_id, t.rentals, SUM(p.amount) AS total_paid
+FROM top_customers t
+JOIN payment p ON t.customer_id = p.customer_id
+GROUP BY t.customer_id, t.rentals
+ORDER BY t.rentals DESC;
+
+### Still need practice
+
+- Building up complex queries CTE-by-CTE, verifying each step before
+  adding the next.
+- Recognizing when ONE scalar subquery is the right tool vs when to
+  reach for a CTE.
